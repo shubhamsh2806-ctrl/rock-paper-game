@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Rock Paper Scissors</title>
+
+<style>
+
+/* Attack animations */
+
+@keyframes attackLeft{
+0%{transform:translateX(0);}
+50%{transform:translateX(120px);}
+100%{transform:translateX(0);}
+}
+
+@keyframes attackRight{
+0%{transform:translateX(0);}
+50%{transform:translateX(-120px);}
+100%{transform:translateX(0);}
+}
+
+.attackPlayer{
+animation:attackLeft 0.6s ease;
+}
+
+.attackComputer{
+animation:attackRight 0.6s ease;
+}
+
+body{
+background:#0a0a0f;
+color:#00ffff;
+font-family:Arial;
+text-align:center;
+margin-top:40px;
+}
+
+h1{
+font-size:50px;
+text-shadow:0 0 15px cyan;
+}
+
+/* Creator name */
+
+#creator{
+position:fixed;
+top:10px;
+right:15px;
+font-size:18px;
+color:yellow;
+font-weight:bold;
+text-shadow:0 0 10px yellow;
+}
+
+/* Start Screen */
+
+#startScreen{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:black;
+color:#00ffff;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+z-index:1000;
+}
+
+#startScreen button{
+font-size:30px;
+padding:15px 40px;
+background:#111;
+color:#00ffff;
+border:none;
+border-radius:10px;
+box-shadow:0 0 20px #00ffff;
+cursor:pointer;
+}
+
+/* Health Bars */
+
+.health-container{
+display:flex;
+justify-content:space-around;
+margin:20px;
+}
+
+.health-bar{
+width:200px;
+height:20px;
+background:#333;
+border-radius:10px;
+overflow:hidden;
+border:2px solid white;
+}
+
+#playerHealth{
+height:100%;
+width:100%;
+background:limegreen;
+transition:width 0.4s;
+}
+
+#computerHealth{
+height:100%;
+width:100%;
+background:red;
+transition:width 0.4s;
+}
+
+/* Arena */
+
+#arena{
+margin-top:20px;
+font-size:40px;
+position:relative;
+}
+
+button{
+font-size:22px;
+padding:15px 30px;
+margin:10px;
+border:none;
+border-radius:10px;
+cursor:pointer;
+background:#111;
+color:#00ffff;
+box-shadow:0 0 10px #00ffff;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.1);
+box-shadow:0 0 25px #ff00ff;
+}
+
+.rock{background:#ff4757;}
+.paper{background:#2ed573;}
+.scissors{background:#1e90ff;}
+
+#scoreboard{
+font-size:24px;
+margin-top:15px;
+}
+
+#result{
+font-size:28px;
+margin-top:20px;
+min-height:60px;
+}
+
+/* Explosion */
+
+#explosion{
+position:absolute;
+font-size:60px;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%) scale(0);
+opacity:0;
+}
+
+@keyframes explode{
+0%{transform:translate(-50%,-50%) scale(0);opacity:0;}
+50%{transform:translate(-50%,-50%) scale(2);opacity:1;}
+100%{transform:translate(-50%,-50%) scale(3);opacity:0;}
+}
+
+.explode{
+animation:explode 0.6s ease-out;
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="startScreen">
+<h1>🎮 Rock Paper Scissors</h1>
+<p>Created by ⭐ Shubham Sharma</p>
+<button onclick="startGame()">▶ Start Game</button>
+</div>
+
+<div id="creator">⭐ Shubham Sharma</div>
+
+<h1>🎮 Rock Paper Scissors</h1>
+
+<div class="health-container">
+
+<div>
+<p>🧑 Player</p>
+<div class="health-bar">
+<div id="playerHealth"></div>
+</div>
+</div>
+
+<div>
+<p>🤖 Computer</p>
+<div class="health-bar">
+<div id="computerHealth"></div>
+</div>
+</div>
+
+</div>
+
+<div id="scoreboard">
+Player: <span id="playerScore">0</span> |
+Computer: <span id="computerScore">0</span>
+</div>
+
+<div id="arena">
+
+<div id="explosion">💥</div>
+
+<h2>⚔️ Battle Arena</h2>
+
+<div style="font-size:60px;">
+<span id="playerChoice">❔</span>
+⚡
+<span id="computerChoice">❔</span>
+</div>
+
+</div>
+
+<br>
+
+<button class="rock" onclick="play('rock')">🪨 Rock</button>
+<button class="paper" onclick="play('paper')">📄 Paper</button>
+<button class="scissors" onclick="play('scissors')">✂️ Scissors</button>
+
+<h2 id="result"></h2>
+
+<button onclick="resetGame()">🔄 Reset Game</button>
+<button onclick="toggleMusic()">🎵 Toggle Music</button>
+
+<div>
+🏆 Leaderboard Wins: <span id="wins">0</span>
+</div>
+
+<audio id="clickSound" src="https://www.soundjay.com/buttons/sounds/button-16.mp3"></audio>
+<audio id="winSound" src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3"></audio>
+
+<audio id="bgMusic" loop>
+<source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3">
+</audio>
+
+<script>
+
+let playerScore=0;
+let computerScore=0;
+let wins=0;
+
+let playerHealth=100;
+let computerHealth=100;
+
+function startGame(){
+document.getElementById("startScreen").style.display="none";
+}
+
+function toggleMusic(){
+let music=document.getElementById("bgMusic");
+music.paused ? music.play() : music.pause();
+}
+
+function damagePlayer(){
+playerHealth-=20;
+document.getElementById("playerHealth").style.width=playerHealth+"%";
+}
+
+function damageComputer(){
+computerHealth-=20;
+document.getElementById("computerHealth").style.width=computerHealth+"%";
+}
+
+function play(userChoice){
+
+document.getElementById("clickSound").play();
+
+let playerIcon=document.getElementById("playerChoice");
+let computerIcon=document.getElementById("computerChoice");
+
+playerIcon.textContent=
+userChoice==="rock"?"🪨":
+userChoice==="paper"?"📄":"✂️";
+
+computerIcon.textContent="❔";
+
+/* attack animation */
+
+playerIcon.classList.add("attackPlayer");
+computerIcon.classList.add("attackComputer");
+
+setTimeout(()=>{
+playerIcon.classList.remove("attackPlayer");
+computerIcon.classList.remove("attackComputer");
+},600);
+
+setTimeout(function(){
+
+let choices=["rock","paper","scissors"];
+let computerChoice=choices[Math.floor(Math.random()*3)];
+
+computerIcon.textContent=
+computerChoice==="rock"?"🪨":
+computerChoice==="paper"?"📄":"✂️";
+
+let explosion=document.getElementById("explosion");
+explosion.classList.add("explode");
+
+setTimeout(()=>{
+explosion.classList.remove("explode");
+},600);
+
+let result="";
+
+if(userChoice===computerChoice){
+result="🤝 Tie!";
+}
+
+else if(
+userChoice==="rock" && computerChoice==="scissors" ||
+userChoice==="paper" && computerChoice==="rock" ||
+userChoice==="scissors" && computerChoice==="paper"
+){
+playerScore++;
+damageComputer();
+result="💥 You Win!";
+document.getElementById("winSound").play();
+}
+else{
+computerScore++;
+damagePlayer();
+result="💻 Computer Wins!";
+}
+
+document.getElementById("playerScore").textContent=playerScore;
+document.getElementById("computerScore").textContent=computerScore;
+
+document.getElementById("result").innerHTML=
+"Computer chose: "+computerChoice+"<br>"+result;
+
+/* Game Over */
+
+if(playerHealth<=0){
+alert("💀 Computer Wins The Match!");
+resetGame();
+}
+
+if(computerHealth<=0){
+alert("🏆 You Won The Match!");
+wins++;
+document.getElementById("wins").textContent=wins;
+resetGame();
+}
+
+},800);
+
+}
+
+function resetGame(){
+
+playerScore=0;
+computerScore=0;
+
+playerHealth=100;
+computerHealth=100;
+
+document.getElementById("playerHealth").style.width="100%";
+document.getElementById("computerHealth").style.width="100%";
+
+document.getElementById("playerScore").textContent=0;
+document.getElementById("computerScore").textContent=0;
+
+document.getElementById("playerChoice").textContent="❔";
+document.getElementById("computerChoice").textContent="❔";
+
+document.getElementById("result").textContent="";
+}
+
+</script>
+
+</body>
+</html>
